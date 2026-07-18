@@ -3,7 +3,7 @@ import SwiftUI
 import TimezonerCore
 
 struct TimezonePicker: NSViewRepresentable {
-    let options: [TimezoneOption]
+    let catalog: TimezoneCatalog
     @Binding var selection: String?
 
     func makeCoordinator() -> Coordinator {
@@ -41,7 +41,7 @@ struct TimezonePicker: NSViewRepresentable {
 
         init(parent: TimezonePicker) {
             self.parent = parent
-            self.filteredOptions = parent.options
+            self.filteredOptions = parent.catalog.options
         }
 
         func numberOfItems(in comboBox: NSComboBox) -> Int {
@@ -71,12 +71,7 @@ struct TimezonePicker: NSViewRepresentable {
                 return
             }
             let query = comboBox.stringValue
-            filteredOptions =
-                query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                ? parent.options
-                : parent.options.filter { option in
-                    option.matches(searchQuery: query)
-                }
+            filteredOptions = parent.catalog.options(matching: query)
             comboBox.reloadData()
             comboBox.noteNumberOfItemsChanged()
         }
@@ -87,7 +82,7 @@ struct TimezonePicker: NSViewRepresentable {
             }
             let entered = normalized(comboBox.stringValue)
             let match =
-                parent.options.first { option in
+                parent.catalog.options.first { option in
                     normalized(option.identifier) == entered || normalized(option.title) == entered
                         || normalized(option.pickerLabel) == entered
                 } ?? (filteredOptions.count == 1 ? filteredOptions[0] : nil)
@@ -101,13 +96,13 @@ struct TimezonePicker: NSViewRepresentable {
         }
 
         func resetFilter() {
-            filteredOptions = parent.options
+            filteredOptions = parent.catalog.options
         }
 
         func updateSelection(in comboBox: NSComboBox) {
             guard
                 let identifier = parent.selection,
-                let option = parent.options.first(where: { option in option.identifier == identifier })
+                let option = parent.catalog.options.first(where: { option in option.identifier == identifier })
             else {
                 comboBox.stringValue = ""
                 return

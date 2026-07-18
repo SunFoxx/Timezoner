@@ -69,6 +69,20 @@ public final class TimezonerState: ObservableObject {
     }
 
     @discardableResult
+    public func renameRow(_ name: String, for rowID: UUID) -> Bool {
+        guard let index = rows.firstIndex(where: { row in row.id == rowID }) else {
+            return false
+        }
+        let persistedName = name.isEmpty ? nil : name
+        guard rows[index].name != persistedName else {
+            return true
+        }
+        rows[index] = rows[index].renaming(persistedName)
+        persistRows()
+        return true
+    }
+
+    @discardableResult
     public func selectTimeZone(_ identifier: String, for rowID: UUID) -> Bool {
         guard catalog.options.contains(where: { option in option.identifier == identifier }) else {
             return false
@@ -157,7 +171,7 @@ public final class TimezonerState: ObservableObject {
     }
 
     private func refreshCatalog(at referenceDate: Date, force: Bool) {
-        guard force || !catalog.hasSameCommonOffsets(at: referenceDate) else {
+        guard force || !catalog.hasSameSearchOffsets(at: referenceDate) else {
             return
         }
         let refreshedCatalog = TimezoneCatalog(referenceDate: referenceDate)

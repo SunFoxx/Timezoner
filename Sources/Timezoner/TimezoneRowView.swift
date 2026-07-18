@@ -123,12 +123,19 @@ struct TimezoneRowView: View {
             .frame(width: TimezonerTheme.rowActionWidth, height: TimezonerTheme.rowActionWidth)
             .contentShape(Rectangle())
             .help("Remove timezone row")
-            .accessibilityLabel("Remove timezone row")
+            .accessibilityLabel(removeRowAccessibilityLabel(for: row))
         } else {
             Color.clear
                 .frame(width: TimezonerTheme.rowActionWidth, height: TimezonerTheme.rowActionWidth)
                 .accessibilityHidden(true)
         }
+    }
+
+    func removeRowAccessibilityLabel(for row: TimezoneRow) -> String {
+        guard let name = row.name?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty else {
+            return String(localized: "Remove timezone row")
+        }
+        return String(format: String(localized: "Remove %@ timezone row"), name)
     }
 
     @ViewBuilder
@@ -149,11 +156,19 @@ struct TimezoneRowView: View {
             .help(timeZone.identifier)
         } else if let row {
             VStack(alignment: .leading, spacing: 5) {
-                Text(row.timeZoneIdentifier == nil ? "Comparison timezone" : "Timezone")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                TextField(
+                    "Row name",
+                    text: rowNameBinding(for: row)
+                )
+                .textFieldStyle(.plain)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .frame(height: TimezonerTheme.rowNameFieldHeight, alignment: .leading)
+                .accessibilityLabel("Row name")
+                .accessibilityIdentifier("Row name \(row.id.uuidString)")
                 TimezonePicker(
-                    options: catalog.options,
+                    catalog: catalog,
                     selection: Binding(
                         get: {
                             row.timeZoneIdentifier
@@ -169,6 +184,17 @@ struct TimezoneRowView: View {
                 .frame(height: 24)
             }
         }
+    }
+
+    func rowNameBinding(for row: TimezoneRow) -> Binding<String> {
+        return Binding(
+            get: {
+                return state.rows.first(where: { candidate in candidate.id == row.id })?.name ?? ""
+            },
+            set: { name in
+                state.renameRow(name, for: row.id)
+            }
+        )
     }
 
     @ViewBuilder

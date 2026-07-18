@@ -156,6 +156,17 @@ final class MenuBarContentViewTests: XCTestCase {
             width: TimezonerTheme.popoverWidth,
             height: TimezonerTheme.rowHeight
         )
+        let window = NSWindow(
+            contentRect: hostingView.frame,
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        window.contentView = hostingView
+        window.orderFrontRegardless()
+        defer {
+            window.orderOut(nil)
+        }
         hostingView.layoutSubtreeIfNeeded()
         let initialAccessibility = accessibilityStrings(in: hostingView)
         XCTAssertTrue(initialAccessibility.contains("16:00"))
@@ -170,6 +181,107 @@ final class MenuBarContentViewTests: XCTestCase {
         XCTAssertFalse(updatedAccessibility.contains("16:00"))
     }
 
+    func testMountedComparisonRowShowsItsEditableNameWithoutChangingHeight() {
+        let instant = ISO8601DateFormatter().date(from: "2026-07-15T16:00:00Z")!
+        let utc = TimeZone(secondsFromGMT: 0)!
+        let row = TimezoneRow(name: "West Coast team", timeZoneIdentifier: "America/Los_Angeles")
+        let state = TimezonerState(
+            now: instant,
+            localTimeZone: utc,
+            rowsStore: ViewTestRowsStore(rows: [row])
+        )
+        let deviceClock = DeviceClock(
+            nowProvider: { instant },
+            timeZoneProvider: { utc },
+            notificationCenter: NotificationCenter(),
+            startsTimer: false
+        )
+        let rowView = TimezoneRowView(
+            state: state,
+            deviceClock: deviceClock,
+            row: state.rows[0],
+            catalog: state.catalog,
+            isLocal: false
+        )
+        let hostingView = NSHostingView(rootView: rowView)
+        hostingView.frame = NSRect(
+            x: 0,
+            y: 0,
+            width: TimezonerTheme.popoverWidth,
+            height: TimezonerTheme.rowHeight
+        )
+        let window = NSWindow(
+            contentRect: hostingView.frame,
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        window.contentView = hostingView
+        window.orderFrontRegardless()
+        defer {
+            window.orderOut(nil)
+        }
+        hostingView.layoutSubtreeIfNeeded()
+
+        let accessibilitySummary = accessibilityDebugSummary(in: hostingView)
+        let nameFrame = accessibilityFrame(
+            in: hostingView,
+            role: .textField,
+            value: "West Coast team"
+        )
+        XCTAssertNotNil(nameFrame, "Accessibility elements: \(accessibilitySummary)")
+        XCTAssertEqual(hostingView.frame.height, TimezonerTheme.rowHeight)
+        XCTAssertEqual(rowView.removeRowAccessibilityLabel(for: row), "Remove West Coast team timezone row")
+    }
+
+    func testMountedComparisonRowNameEditFlowsThroughTheBindingAndPersists() {
+        let instant = ISO8601DateFormatter().date(from: "2026-07-15T16:00:00Z")!
+        let utc = TimeZone(secondsFromGMT: 0)!
+        let row = TimezoneRow(name: "Initial name", timeZoneIdentifier: "America/Los_Angeles")
+        let store = ViewTestRowsStore(rows: [row])
+        let state = TimezonerState(now: instant, localTimeZone: utc, rowsStore: store)
+        let deviceClock = DeviceClock(
+            nowProvider: { instant },
+            timeZoneProvider: { utc },
+            notificationCenter: NotificationCenter(),
+            startsTimer: false
+        )
+        let rowView = TimezoneRowView(
+            state: state,
+            deviceClock: deviceClock,
+            row: state.rows[0],
+            catalog: state.catalog,
+            isLocal: false
+        )
+        let hostingView = NSHostingView(rootView: rowView)
+        hostingView.frame = NSRect(
+            x: 0,
+            y: 0,
+            width: TimezonerTheme.popoverWidth,
+            height: TimezonerTheme.rowHeight
+        )
+        let window = NSWindow(
+            contentRect: hostingView.frame,
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        window.contentView = hostingView
+        window.orderFrontRegardless()
+        defer {
+            window.orderOut(nil)
+        }
+        hostingView.layoutSubtreeIfNeeded()
+
+        rowView.rowNameBinding(for: state.rows[0]).wrappedValue = "Customer success"
+
+        XCTAssertEqual(state.rows[0].name, "Customer success")
+        guard case .success(let savedRows) = store.load() else {
+            return XCTFail("Expected the edited name to save")
+        }
+        XCTAssertEqual(savedRows?.first?.name, "Customer success")
+    }
+
     func testMountedComparisonScrollViewportExposesExactlyTwoRowHeights() {
         let instant = ISO8601DateFormatter().date(from: "2026-07-15T16:00:00Z")!
         let utc = TimeZone(secondsFromGMT: 0)!
@@ -177,9 +289,9 @@ final class MenuBarContentViewTests: XCTestCase {
             now: instant,
             localTimeZone: utc,
             rowsStore: ViewTestRowsStore(rows: [
-                TimezoneRow(timeZoneIdentifier: "America/Los_Angeles"),
-                TimezoneRow(timeZoneIdentifier: "GMT+0600"),
-                TimezoneRow()
+                TimezoneRow(name: "West Coast team", timeZoneIdentifier: "America/Los_Angeles"),
+                TimezoneRow(name: "Asia team", timeZoneIdentifier: "GMT+0600"),
+                TimezoneRow(name: "Unassigned")
             ])
         )
         let deviceClock = DeviceClock(

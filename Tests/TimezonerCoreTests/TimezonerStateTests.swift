@@ -37,6 +37,43 @@ final class TimezonerStateTests: XCTestCase {
         XCTAssertEqual(store.rows?.map(\.timeZoneIdentifier), ["GMT+0900"])
     }
 
+    func testRenamingARowPersistsAndSurvivesTimezoneChanges() {
+        let store = InMemoryTimezoneRowsStore()
+        let state = TimezonerState(
+            now: TestSupport.date(2026, 1, 15, 12, 0, in: utc),
+            localTimeZone: utc,
+            rowsStore: store
+        )
+        let rowID = state.rows[0].id
+
+        XCTAssertTrue(state.renameRow("West Coast team", for: rowID))
+        XCTAssertTrue(state.selectTimeZone("America/Los_Angeles", for: rowID))
+
+        XCTAssertEqual(state.rows[0].name, "West Coast team")
+        XCTAssertEqual(store.rows?[0].name, "West Coast team")
+        XCTAssertEqual(store.rows?[0].timeZoneIdentifier, "America/Los_Angeles")
+
+        let restoredState = TimezonerState(
+            now: TestSupport.date(2026, 1, 15, 13, 0, in: utc),
+            localTimeZone: utc,
+            rowsStore: store
+        )
+        XCTAssertEqual(restoredState.rows[0].name, "West Coast team")
+        XCTAssertEqual(restoredState.rows[0].timeZoneIdentifier, "America/Los_Angeles")
+    }
+
+    func testRenamingAnUnknownRowDoesNotMutatePersistence() {
+        let store = InMemoryTimezoneRowsStore()
+        let state = TimezonerState(
+            now: TestSupport.date(2026, 1, 15, 12, 0, in: utc),
+            localTimeZone: utc,
+            rowsStore: store
+        )
+
+        XCTAssertFalse(state.renameRow("Missing", for: UUID()))
+        XCTAssertNil(store.rows)
+    }
+
     func testDuplicateComparisonTimezonesAreRejectedAndSanitized() {
         let store = InMemoryTimezoneRowsStore(rows: [
             TimezoneRow(timeZoneIdentifier: "GMT+0530"),
@@ -58,8 +95,8 @@ final class TimezonerStateTests: XCTestCase {
 
     func testLoadsValidRowsAndDisablesUnavailableTimezones() {
         let store = InMemoryTimezoneRowsStore(rows: [
-            TimezoneRow(timeZoneIdentifier: "Asia/Tokyo"),
-            TimezoneRow(timeZoneIdentifier: "Invalid/Removed")
+            TimezoneRow(name: "Tokyo office", timeZoneIdentifier: "Asia/Tokyo"),
+            TimezoneRow(name: "Former office", timeZoneIdentifier: "Invalid/Removed")
         ])
         let state = TimezonerState(
             now: TestSupport.date(2026, 1, 15, 12, 0, in: utc),
@@ -68,6 +105,7 @@ final class TimezonerStateTests: XCTestCase {
         )
 
         XCTAssertEqual(state.rows.map(\.timeZoneIdentifier), ["GMT+0900", nil])
+        XCTAssertEqual(state.rows.map(\.name), ["Tokyo office", "Former office"])
     }
 
     func testEditingAnyConfiguredRowUpdatesCanonicalSelection() {

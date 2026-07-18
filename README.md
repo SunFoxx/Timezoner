@@ -15,9 +15,10 @@ Timezoner keeps one canonical moment or range synchronized across a pinned local
 - Edit a 24-hour time directly or drag a five-minute-step timeline handle.
 - Add an optional end time to visualize ranges, including ranges that cross midnight.
 - Compare the same moment across multiple synchronized timezone rows.
+- Give each comparison row a persistent name without reducing the two-row viewport.
 - Keep the device timezone pinned while comparison rows remain scrollable.
 - Show a durable live-device-time marker on every configured timeline, with a timezone-adjusted hover label.
-- Search a compact timezone catalog by names, abbreviations, UTC/GMT offsets, or numeric values.
+- Search a compact timezone catalog by abbreviations, UTC/GMT offsets, numeric values, IANA cities, or hidden country and territory capital aliases.
 - Distinguish seasonal PT, MT, CT, and ET rules from neutral fixed-offset timezones.
 - Remember the comparison-row composition while resetting the selected time to the current device time whenever the menu closes.
 - Register as a macOS login item and surface when approval is required in System Settings.
@@ -51,8 +52,9 @@ Extract the archive, move `Timezoner.app` into `/Applications`, and open it once
 1. Open Timezoner from the menu-bar icon. The pinned first row uses the Mac's current timezone and cannot be removed or changed.
 2. Enter a start time or drag its handle. Select **+ End** when you need a range.
 3. Choose a comparison timezone, then add more rows as needed.
-4. Edit any configured row; every other row updates to represent the same absolute moment.
-5. Hover the coral live-time strip to reveal the device's current time in that row's timezone.
+4. Name a comparison row for the person, team, or place it represents; the name is restored with that row next time.
+5. Edit any configured row; every other row updates to represent the same absolute moment.
+6. Hover the coral live-time strip to reveal the device's current time in that row's timezone.
 
 The comparison rows are persisted in `UserDefaults`. Selected clock values are intentionally refreshed from the current device time after the menu closes.
 
@@ -77,6 +79,10 @@ swift build -c release -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-
 ## Privacy
 
 Timezoner does not send analytics, make network requests, or require an account. The configured comparison rows are stored locally using `UserDefaults`.
+
+## Data attribution
+
+Country and territory capital aliases are derived from the [GeoNames geographical database](https://www.geonames.org/) and distributed under [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/). The derived data is modified and supplemented with common capital names. The aliases are used only as hidden search metadata; timezone picker labels stay generic. A copy of the attribution is packaged in `Timezoner.app/Contents/Resources/THIRD_PARTY_NOTICES.txt`.
 
 ## License
 

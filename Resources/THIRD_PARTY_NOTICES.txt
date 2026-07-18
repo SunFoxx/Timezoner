@@ -1,0 +1,12 @@
+Timezoner third-party notices
+
+GeoNames geographical database
+https://www.geonames.org/
+
+Timezoner's hidden country and territory capital search aliases are derived
+from the GeoNames countryInfo and cities15000 datasets. The derived data was
+modified and supplemented with common capital names and aliases.
+
+GeoNames data is licensed under the Creative Commons Attribution 4.0
+International License:
+https://creativecommons.org/licenses/by/4.0/

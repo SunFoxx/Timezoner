@@ -21,6 +21,7 @@ mkdir -p "$CONTENTS_PATH/Resources/en.lproj"
 ditto "$BIN_PATH/Timezoner" "$CONTENTS_PATH/MacOS/Timezoner"
 ditto "$ROOT/Config/Info.plist" "$CONTENTS_PATH/Info.plist"
 ditto "$ROOT/Resources/en.lproj/Localizable.strings" "$CONTENTS_PATH/Resources/en.lproj/Localizable.strings"
+ditto "$ROOT/Resources/THIRD_PARTY_NOTICES.txt" "$CONTENTS_PATH/Resources/THIRD_PARTY_NOTICES.txt"
 
 if [[ -f "$ROOT/Assets/Timezoner.icns" ]]; then
     ditto "$ROOT/Assets/Timezoner.icns" "$CONTENTS_PATH/Resources/Timezoner.icns"

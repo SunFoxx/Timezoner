@@ -23,7 +23,9 @@
 "Optional" = "Optional";
 "Quit Timezoner" = "Quit Timezoner";
 "Remove timezone row" = "Remove timezone row";
+"Remove %@ timezone row" = "Remove %@ timezone row";
 "Reset the start to the current time" = "Reset the start to the current time";
+"Row name" = "Row name";
 "Rows are remembered · Time resets to now when closed" = "Rows are remembered · Time resets to now when closed";
 "Single time" = "Single time";
 "Start" = "Start";

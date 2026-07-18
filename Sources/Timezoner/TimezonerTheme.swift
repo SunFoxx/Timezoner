@@ -45,6 +45,7 @@ enum TimezonerTheme {
     static let rowActionWidth: CGFloat = 20
     static let inlineActionSize: CGFloat = 18
     static let endpointHeaderHeight: CGFloat = 18
+    static let rowNameFieldHeight: CGFloat = 16
     static let sliderHeight: CGFloat = 46
     static let sliderHandleSize: CGFloat = 14
     static let sliderHitSize: CGFloat = 30

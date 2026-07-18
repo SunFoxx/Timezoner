@@ -85,6 +85,22 @@ Feature: Compare a local time or range across timezones
     And the comparison viewport fits exactly two complete rows with no partial third row
     And scrolling does not move or resize the local row
 
+  Scenario: Name comparison rows without changing viewport capacity
+    Given a comparison row is visible
+    When I name it "West Coast team"
+    Then that name is visible at the top of the row
+    And the row keeps its fixed height
+    And the comparison viewport still fits exactly two complete rows
+    When I change that row's timezone and reopen the app
+    Then the name "West Coast team" is restored with the row
+
+  Scenario: Restore rows saved before names were supported
+    Given a configured comparison row was saved by an earlier version
+    And its stored data has no row name
+    When I open the updated app
+    Then the timezone selection is preserved
+    And the row exposes an empty editable name without a persistence error
+
   Scenario: Edit from a comparison row
     Given UTC shows 12:00 and ET shows 07:00
     When I change ET to 08:00
@@ -146,6 +162,21 @@ Feature: Compare a local time or range across timezones
     Then the Pacific Time option is offered
     When I type "-8", "UTC-08", "5:30", or "530"
     Then matching UTC offset options are offered without input lag
+
+  Scenario: Search generic timezone options by hidden city names
+    Given country and territory capitals and IANA exemplar cities are indexed invisibly
+    When I search for "Ottawa", "Brasilia", "Abuja", "Canberra", or "New Delhi"
+    Then the generic timezone option representing that city's clock is offered
+    And no city or country name appears in the option label
+    When I search with Latin diacritic, underscore, space, or legacy spelling variants
+    Then the same generic option is offered without duplicate results
+
+  Scenario: Route hidden city names to seasonal rules when they truly match
+    Given seasonal PT, MT, CT, and ET options remain distinct from fixed offsets
+    When I search for a city whose timezone follows the same transition rules
+    Then the matching seasonal option is offered instead of its current fixed offset
+    But a city with a different or fixed transition schedule stays on the neutral offset option
+    And city aliases move to the correct neutral offset when their own timezone changes season
 
   Scenario: Launch automatically after login
     Given Timezoner is installed as a signed application
